@@ -1,13 +1,15 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { voidTransactionSchema } from '@/schemas/transaction.schema';
 import { API_BASE_URL } from '@/utils/api';
 import { ActionResponse } from './auth.action';
 
 /**
  * Server Action untuk Void Transaksi.
- * Menggunakan teknik `.bind(null, txId)` sesuai materi untuk menyisipkan argumen ID secara aman.
+ * Menggunakan teknik `.bind(null, txId)` sesuai materi untuk menyisipkan argumen ID secara aman,
+ * serta menyertakan autentikasi token server-side.
  */
 export async function voidTransactionAction(
   txId: string,
@@ -29,9 +31,15 @@ export async function voidTransactionAction(
   }
 
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
     const res = await fetch(`${API_BASE_URL}/transactions/${encodeURIComponent(txId)}/void`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ reason: parsed.data.reason }),
     });
 
