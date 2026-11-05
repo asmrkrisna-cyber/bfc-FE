@@ -11,7 +11,7 @@ interface CloseShiftModalProps {
 }
 
 export default function CloseShiftModal({ cashierName, onClose, onConfirm }: CloseShiftModalProps) {
-  const [state, formAction, isPending] = useActionState<ActionResponse | null, FormData>(
+  const [state, formAction, isPending] = useActionState<ActionResponse<{ valid: boolean }> | null, FormData>(
     verifyPinAction,
     null
   );

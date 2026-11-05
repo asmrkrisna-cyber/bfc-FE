@@ -30,7 +30,7 @@ export default function ShiftModal({
   handleSaveShift,
 }: ShiftModalProps) {
   const [cashierList, setCashierList] = useState<CashierOption[]>([]);
-  const [state, formAction, isPending] = useActionState<ActionResponse | null, FormData>(
+  const [state, formAction, isPending] = useActionState<ActionResponse<{ valid: boolean }> | null, FormData>(
     verifyPinAction,
     null
   );

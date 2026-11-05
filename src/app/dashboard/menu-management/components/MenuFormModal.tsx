@@ -1,18 +1,22 @@
 'use client';
 
+import { Dispatch, SetStateAction } from 'react';
 import { CloseIcon } from '@/components/Icons';
+import { MenuItem } from '@/data/menuData';
+
+interface MenuFormData {
+  name: string;
+  category: string;
+  price: string;
+  description: string;
+}
 
 interface MenuFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editingItem: any;
-  formData: {
-    name: string;
-    category: string;
-    price: string;
-    description: string;
-  };
-  setFormData: (data: any) => void;
+  editingItem: MenuItem | null;
+  formData: MenuFormData;
+  setFormData: Dispatch<SetStateAction<MenuFormData>>;
   categories: string[];
   handleSaveMenu: (e: React.FormEvent) => void;
 }

@@ -2,12 +2,36 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { API_BASE_URL } from '@/utils/api';
-import { Transaction } from '@/data/riwayatData';
+import { Transaction, TransactionItem } from '@/data/riwayatData';
 
 import TransactionList from './components/TransactionList';
 import TransactionDetail from './components/TransactionDetail';
 import ReprintModal from './components/ReprintModal';
 import VoidModal from './components/VoidModal';
+
+interface RawTransaction {
+  transaction_id: string;
+  customer_name?: string;
+  table_number?: string;
+  payment_method?: string;
+  created_at: string;
+  status?: string;
+  total?: number;
+  subtotal?: number;
+  discount_amount?: number;
+  tax?: number;
+  cash_given?: number;
+  change_amount?: number;
+  void_reason?: string;
+  shift_id?: number | null;
+}
+
+interface RawTransactionItem {
+  product_name?: string;
+  name?: string;
+  quantity: number;
+  price: number;
+}
 
 export default function RiwayatPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -16,21 +40,23 @@ export default function RiwayatPage() {
   const [showVoidModal, setShowVoidModal] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Fetch data asli dari backend Express MySQL (dengan penyesuaian shift info jika ada)
-  const fetchTransactions = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/transactions`);
-      if (res.ok) {
-        const data = await res.json();
+  const loadTransactions = () => {
+    fetch(`${API_BASE_URL}/transactions`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then(async (data: RawTransaction[] | null) => {
+        if (!data) {
+          setIsLoading(false);
+          return;
+        }
 
         const mappedData: Transaction[] = await Promise.all(
-          data.map(async (tx: any) => {
-            let itemsMapped = [];
+          data.map(async (tx) => {
+            let itemsMapped: TransactionItem[] = [];
             try {
               const resItems = await fetch(`${API_BASE_URL}/transactions/${tx.transaction_id}/items`);
               if (resItems.ok) {
-                const itemsData = await resItems.json();
-                itemsMapped = itemsData.map((item: any) => ({
+                const itemsData: RawTransactionItem[] = await resItems.json();
+                itemsMapped = itemsData.map((item) => ({
                   name: item.product_name || item.name || 'Produk',
                   qty: item.quantity,
                   price: item.price,
@@ -49,7 +75,7 @@ export default function RiwayatPage() {
               date: new Date(tx.created_at).toLocaleDateString('id-ID'),
               status: tx.status || 'SUKSES',
               total: tx.total || 0,
-              subtotal: tx.subtotal || tx.total,
+              subtotal: tx.subtotal || tx.total || 0,
               discount: tx.discount_amount || 0,
               tax: tx.tax || 0,
               cashGiven: tx.cash_given || 0,
@@ -57,24 +83,22 @@ export default function RiwayatPage() {
               voidReason: tx.void_reason || '',
               items: itemsMapped,
               shiftId: tx.shift_id || null,
-            } as any;
+            };
           })
         );
 
         setTransactions(mappedData);
-        if (mappedData.length > 0 && !selectedTxId) {
-          setSelectedTxId(mappedData[0].id);
-        }
-      }
-    } catch (err) {
-      console.error('Gagal mengambil data transaksi:', err);
-    } finally {
-      setIsLoading(false);
-    }
+        setSelectedTxId((prev) => (prev ? prev : (mappedData[0]?.id || '')));
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error('Gagal mengambil data transaksi:', err);
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
-    fetchTransactions();
+    loadTransactions();
   }, []);
 
   const selectedTx = transactions.find((t) => t.id === selectedTxId);
@@ -129,7 +153,7 @@ export default function RiwayatPage() {
         <VoidModal
           txId={selectedTx.id}
           onClose={() => setShowVoidModal(false)}
-          onSuccess={fetchTransactions}
+          onSuccess={loadTransactions}
         />
       )}
     </div>

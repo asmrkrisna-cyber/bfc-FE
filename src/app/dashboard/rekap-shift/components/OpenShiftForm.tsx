@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useActionState } from 'react';
 import { API_BASE_URL } from '@/utils/api';
-import { openShiftAction, ActionResponse } from '@/actions/shift.action';
+import { openShiftAction, OpenShiftActionResponse } from '@/actions/shift.action';
 import { AlertIcon, SpinnerIcon, GreenCircleIcon } from '@/components/Icons';
 
 interface CashierOption {
@@ -16,7 +16,7 @@ interface OpenShiftFormProps {
 
 export default function OpenShiftForm({ onStartShift }: OpenShiftFormProps) {
   const [cashierList, setCashierList] = useState<CashierOption[]>([]);
-  const [state, formAction, isPending] = useActionState<ActionResponse | null, FormData>(
+  const [state, formAction, isPending] = useActionState<OpenShiftActionResponse | null, FormData>(
     openShiftAction,
     null
   );

@@ -4,6 +4,30 @@ export interface SoldItem {
   price: number;
 }
 
+export interface ShiftHistoryItem {
+  id?: number | string;
+  shift_status?: string;
+  shiftCategory?: string;
+  cashier_name?: string;
+  cashierName?: string;
+  start_time?: string;
+  end_time?: string;
+  starting_cash?: number | string;
+  startingCash?: number;
+  total_cash?: number | string;
+  totalCash?: number;
+  total_qris?: number | string;
+  totalQRIS?: number;
+  total_shopeefood?: number | string;
+  totalShopeeFood?: number;
+  tax_amount?: number | string;
+  tax?: number;
+  net_revenue?: number | string;
+  netRevenue?: number;
+  final_physical_cash?: number | string;
+  expected_cash?: number | string;
+}
+
 export interface ShiftRecord {
   id: string;
   shiftCategory: string;

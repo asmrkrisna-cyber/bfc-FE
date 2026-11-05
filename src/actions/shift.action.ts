@@ -7,8 +7,16 @@ import { ActionResponse } from './auth.action';
 
 export type { ActionResponse };
 
+export interface OpenShiftData {
+  cashier: string;
+  category: string;
+  startingCash: number;
+}
+
+export type OpenShiftActionResponse = ActionResponse<OpenShiftData>;
+
 export async function verifyPinAction(
-  _prevState: ActionResponse | null,
+  _prevState: ActionResponse<{ valid: boolean }> | null,
   formData: FormData
 ): Promise<ActionResponse<{ valid: boolean }>> {
   const rawData = {
@@ -49,7 +57,7 @@ export async function verifyPinAction(
       message: 'PIN terverifikasi.',
       data: { valid: true },
     };
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in verifyPinAction:', err);
     return {
       success: false,
@@ -59,9 +67,9 @@ export async function verifyPinAction(
 }
 
 export async function openShiftAction(
-  _prevState: ActionResponse | null,
+  _prevState: OpenShiftActionResponse | null,
   formData: FormData
-): Promise<ActionResponse<{ cashier: string; category: string; startingCash: number }>> {
+): Promise<OpenShiftActionResponse> {
   const rawData = {
     cashierName: formData.get('cashierName'),
     category: formData.get('category'),
@@ -129,7 +137,7 @@ export async function openShiftAction(
         startingCash: parsed.data.startingCash,
       },
     };
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error in openShiftAction:', err);
     return {
       success: false,

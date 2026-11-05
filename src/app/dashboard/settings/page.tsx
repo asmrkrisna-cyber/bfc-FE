@@ -39,23 +39,39 @@ export default function SettingsPage() {
 
   const [errorMsg, setErrorMsg] = useState('');
 
-  const fetchCashiers = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(`${API_BASE_URL}/cashiers`);
-      if (res.ok) {
-        const data = await res.json();
-        setCashiers(data);
-      }
-    } catch (err) {
-      console.error('Gagal mengambil daftar kasir:', err);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadCashiers = () => {
+    fetch(`${API_BASE_URL}/cashiers`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setCashiers(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal mengambil daftar kasir:', err);
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
-    fetchCashiers();
+    let ignore = false;
+    fetch(`${API_BASE_URL}/cashiers`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!ignore && data) {
+          setCashiers(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal mengambil daftar kasir:', err);
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleOpenAddModal = () => {
@@ -119,7 +135,7 @@ export default function SettingsPage() {
         throw new Error(data.message || 'Gagal menambahkan kasir');
       }
 
-      await fetchCashiers();
+      loadCashiers();
       setIsAddModalOpen(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Terjadi kesalahan pada server';
@@ -194,7 +210,7 @@ export default function SettingsPage() {
       }
 
       alert(`Kasir "${selectedCashier.name}" berhasil dihapus.`);
-      await fetchCashiers();
+      loadCashiers();
       setIsDeleteModalOpen(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Gagal menghapus kasir';

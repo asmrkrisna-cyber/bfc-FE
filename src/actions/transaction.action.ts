@@ -51,7 +51,7 @@ export async function voidTransactionAction(
       message: 'Transaksi berhasil di-void.',
       data: { txId },
     };
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error voidTransactionAction:', err);
     return {
       success: false,

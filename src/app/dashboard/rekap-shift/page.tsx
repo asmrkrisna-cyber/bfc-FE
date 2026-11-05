@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { API_BASE_URL } from '@/utils/api';
+import { SoldItem, ShiftHistoryItem } from '@/data/rekapShiftData';
 import OpenShiftForm from './components/OpenShiftForm';
 import ShiftActiveCard from './components/ShiftActiveCard';
 import RevenueDetailCard from './components/RevenueDetailCard';
@@ -10,38 +11,18 @@ import ShiftHistoryTable from './components/ShiftHistoryTable';
 import ThermalReceiptModal from './components/ThermalReceiptModal';
 import CloseShiftModal from './components/CloseShiftModal';
 
-export interface SoldItem {
-  name: string;
-  qty: number;
-  price: number;
-}
-
-export interface ShiftRecord {
-  id: string;
-  shiftCategory: string;
-  cashierName: string;
-  timeRange: string;
-  startingCash: number;
-  totalCash: number;
-  totalQRIS: number;
-  totalShopeeFood: number;
-  taxAmount: number;
-  netRevenue: number;
-  finalPhysicalCash: number;
-}
-
 export default function RekapShiftPage() {
   const [isShiftActive, setIsShiftActive] = useState<boolean>(false);
   const [cashierName, setCashierName] = useState<string>('Kasir');
-  const [shiftCategory, setShiftCategory] = useState<string>('Opening');
-  const [startTime, setStartTime] = useState<string>('');
+  const [shiftCategory, setShiftCategory] = useState<'Opening' | 'Closing'>('Opening');
+  const [startTime, setStartTime] = useState<string>('00:00 WIB');
   const [startingCash, setStartingCash] = useState<number>(0);
 
   const [revenueCash, setRevenueCash] = useState<number>(0);
   const [revenueQRIS, setRevenueQRIS] = useState<number>(0);
   const [revenueShopeeFood, setRevenueShopeeFood] = useState<number>(0);
-  const [totalOmset, setTotalOmset] = useState<number>(0);
   const [totalTax, setTotalTax] = useState<number>(0);
+  const [totalOmset, setTotalOmset] = useState<number>(0);
   const [netRevenue, setNetRevenue] = useState<number>(0);
   const [estimatedPhysicalCash, setEstimatedPhysicalCash] = useState<number>(0);
   const [shiftId, setShiftId] = useState<number | null>(null);
@@ -49,24 +30,18 @@ export default function RekapShiftPage() {
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
   const [soldItems, setSoldItems] = useState<SoldItem[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<ShiftHistoryItem[]>([]);
 
-  useEffect(() => {
-    fetchSummaryData();
-    fetchHistoryData();
-  }, []);
-
-  const fetchSummaryData = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/shifts/summary`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.active) {
+  const fetchSummaryData = () => {
+    fetch(`${API_BASE_URL}/shifts/summary`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.active) {
           setShiftId(data.shiftInfo.id);
           setCashierName(data.shiftInfo.cashier_name || 'Kasir');
           setShiftCategory(data.shiftInfo.shift_status || 'Opening');
           setStartingCash(Number(data.shiftInfo.starting_cash) || 0);
-          
+
           if (data.shiftInfo.start_time) {
             const timeStr = new Date(data.shiftInfo.start_time).toLocaleTimeString('id-ID', {
               hour: '2-digit',
@@ -84,34 +59,42 @@ export default function RekapShiftPage() {
           setEstimatedPhysicalCash(Number(data.expectedCashInDrawer) || 0);
 
           if (data.soldItems && Array.isArray(data.soldItems)) {
-            const formattedItems: SoldItem[] = data.soldItems.map((item: any) => ({
-              name: item.product_name,
-              qty: Number(item.total_qty),
-              price: Number(item.total_price) / Number(item.total_qty) || 0,
-            }));
+            const formattedItems: SoldItem[] = data.soldItems.map(
+              (item: { product_name: string; total_qty: number; total_price: number }) => ({
+                name: item.product_name,
+                qty: Number(item.total_qty),
+                price: Number(item.total_price) / Number(item.total_qty) || 0,
+              })
+            );
             setSoldItems(formattedItems);
           }
           setIsShiftActive(true);
         } else {
           setIsShiftActive(false);
         }
-      }
-    } catch (err) {
-      console.error('Gagal mengambil data rekap shift:', err);
-    }
+      })
+      .catch((err) => {
+        console.error('Gagal mengambil data rekap shift:', err);
+      });
   };
 
-  const fetchHistoryData = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/shifts/history`);
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data);
-      }
-    } catch (err) {
-      console.error('Gagal mengambil riwayat shift:', err);
-    }
+  const fetchHistoryData = () => {
+    fetch(`${API_BASE_URL}/shifts/history`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setHistory(data);
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal mengambil riwayat shift:', err);
+      });
   };
+
+  useEffect(() => {
+    fetchSummaryData();
+    fetchHistoryData();
+  }, []);
 
   const totalItemsSold = soldItems.reduce((sum, item) => sum + item.qty, 0);
 

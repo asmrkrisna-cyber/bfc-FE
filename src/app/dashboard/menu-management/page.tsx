@@ -26,23 +26,39 @@ export default function MenuManagementPage() {
     description: '',
   });
 
-  const fetchMenuList = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(`${API_BASE_URL}/products`);
-      if (res.ok) {
-        const data = await res.json();
-        setMenuList(data);
-      }
-    } catch (err) {
-      console.error('Gagal memuat produk dari server:', err);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadMenuList = () => {
+    fetch(`${API_BASE_URL}/products`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setMenuList(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal memuat produk dari server:', err);
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
-    fetchMenuList();
+    let ignore = false;
+    fetch(`${API_BASE_URL}/products`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!ignore && data) {
+          setMenuList(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal memuat produk dari server:', err);
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleToggleStatus = async (id: string) => {
@@ -59,11 +75,11 @@ export default function MenuManagementPage() {
       });
       if (!res.ok) {
         // Rollback jika gagal
-        fetchMenuList();
+        loadMenuList();
       }
     } catch (err) {
       console.error('Gagal toggle status produk:', err);
-      fetchMenuList();
+      loadMenuList();
     }
   };
 
@@ -103,7 +119,7 @@ export default function MenuManagementPage() {
         });
 
         if (res.ok) {
-          await fetchMenuList();
+          loadMenuList();
           setIsModalOpen(false);
         } else {
           alert('Gagal memperbarui produk di server.');
@@ -121,7 +137,7 @@ export default function MenuManagementPage() {
         });
 
         if (res.ok) {
-          await fetchMenuList();
+          loadMenuList();
           setIsModalOpen(false);
         } else {
           alert('Gagal menambahkan produk baru.');

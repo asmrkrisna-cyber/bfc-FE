@@ -2,12 +2,12 @@
 
 import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginAction, ActionResponse } from '@/actions/auth.action';
+import { loginAction, AuthActionResponse } from '@/actions/auth.action';
 import { AlertIcon, SpinnerIcon } from '@/components/Icons';
 
 export default function LoginForm() {
   const router = useRouter();
-  const [state, formAction, isPending] = useActionState<ActionResponse | null, FormData>(
+  const [state, formAction, isPending] = useActionState<AuthActionResponse | null, FormData>(
     loginAction,
     null
   );

@@ -1,7 +1,9 @@
 'use client';
 
+import { ShiftHistoryItem } from '@/data/rekapShiftData';
+
 interface ShiftHistoryTableProps {
-  history: any[];
+  history: ShiftHistoryItem[];
 }
 
 export default function ShiftHistoryTable({ history }: ShiftHistoryTableProps) {

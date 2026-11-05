@@ -21,12 +21,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const fetchActiveShift = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/shifts/active`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.active && data.shift) {
+  const loadActiveShift = () => {
+    fetch(`${API_BASE_URL}/shifts/active`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.active && data.shift) {
           const rawStatus = data.shift.shift_status || 'Opening';
           const status = rawStatus.includes('Shift')
             ? rawStatus
@@ -38,27 +37,27 @@ export default function Sidebar() {
           localStorage.setItem('active_shift_status', text);
           return;
         }
-      }
-      setActiveShiftInfo('• Belum Ada Shift Aktif');
-      setIsShiftActive(false);
-      setActiveShiftName('');
-      localStorage.removeItem('active_shift_status');
-    } catch (err) {
-      const savedShift = localStorage.getItem('active_shift_status');
-      if (savedShift && !savedShift.includes('Belum Ada')) {
-        setActiveShiftInfo(savedShift);
-        setIsShiftActive(true);
-      } else {
         setActiveShiftInfo('• Belum Ada Shift Aktif');
         setIsShiftActive(false);
-      }
-    }
+        setActiveShiftName('');
+        localStorage.removeItem('active_shift_status');
+      })
+      .catch(() => {
+        const savedShift = localStorage.getItem('active_shift_status');
+        if (savedShift && !savedShift.includes('Belum Ada')) {
+          setActiveShiftInfo(savedShift);
+          setIsShiftActive(true);
+        } else {
+          setActiveShiftInfo('• Belum Ada Shift Aktif');
+          setIsShiftActive(false);
+        }
+      });
   };
 
   useEffect(() => {
-    fetchActiveShift();
+    loadActiveShift();
 
-    const handleUpdate = () => fetchActiveShift();
+    const handleUpdate = () => loadActiveShift();
     window.addEventListener('storage', handleUpdate);
     window.addEventListener('shiftUpdated', handleUpdate);
     window.addEventListener('focus', handleUpdate);
@@ -72,7 +71,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     if (isOpen) {
-      fetchActiveShift();
+      loadActiveShift();
     }
   }, [isOpen]);
 
@@ -161,8 +160,8 @@ export default function Sidebar() {
           localStorage.removeItem('active_shift_status');
         }
       }
-    } catch (err) {
-      console.warn('Gagal cek status shift saat logout:', err);
+    } catch {
+      console.warn('Gagal cek status shift saat logout');
     }
 
     executeLogout();
@@ -249,7 +248,10 @@ export default function Sidebar() {
         <div className="pt-4 border-t border-[#EBE6DF] space-y-3">
           <div className="p-2.5 bg-[#FDFBF7] border border-[#EBE6DF] rounded-xl flex items-center justify-between shadow-xs">
             <div>
-              <p className="text-xs font-semibold text-[#2C221E]">Kasir Aktif</p>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${isShiftActive ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                <p className="text-xs font-semibold text-[#2C221E]">Kasir Aktif</p>
+              </div>
               <p className="text-[10px] text-[#6E5545] font-medium truncate max-w-[170px]">{activeShiftInfo}</p>
             </div>
             <div className="bg-white p-2 rounded-xl border border-[#EBE6DF] text-[#6E5545] flex items-center justify-center">

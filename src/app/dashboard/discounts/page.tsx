@@ -11,23 +11,39 @@ export default function DiscountPage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchDiscounts = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch(`${API_BASE_URL}/discounts`);
-      if (res.ok) {
-        const data = await res.json();
-        setDiscounts(data);
-      }
-    } catch (err) {
-      console.error('Gagal mengambil data diskon dari server:', err);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadDiscounts = () => {
+    fetch(`${API_BASE_URL}/discounts`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setDiscounts(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal mengambil data diskon dari server:', err);
+        setIsLoading(false);
+      });
   };
 
   useEffect(() => {
-    fetchDiscounts();
+    let ignore = false;
+    fetch(`${API_BASE_URL}/discounts`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!ignore && data) {
+          setDiscounts(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Gagal mengambil data diskon dari server:', err);
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleToggleActive = async (id: string) => {
@@ -41,11 +57,11 @@ export default function DiscountPage() {
         method: 'PATCH',
       });
       if (!res.ok) {
-        fetchDiscounts();
+        loadDiscounts();
       }
     } catch (err) {
       console.error('Gagal mengubah status diskon:', err);
-      fetchDiscounts();
+      loadDiscounts();
     }
   };
 
@@ -70,7 +86,7 @@ export default function DiscountPage() {
       });
 
       if (res.ok) {
-        await fetchDiscounts();
+        loadDiscounts();
         setIsModalOpen(false);
       } else {
         alert('Gagal menambahkan diskon baru.');

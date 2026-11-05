@@ -4,17 +4,24 @@ import { cookies } from 'next/headers';
 import { loginSchema } from '@/schemas/auth.schema';
 import { API_BASE_URL } from '@/utils/api';
 
-export interface ActionResponse<T = any> {
+export interface LoginData {
+  token: string;
+  user: { id: number; username: string; role?: string };
+}
+
+export interface ActionResponse<T = unknown> {
   success: boolean;
   message?: string;
   errors?: Record<string, string[]>;
   data?: T;
 }
 
+export type AuthActionResponse = ActionResponse<LoginData>;
+
 export async function loginAction(
-  _prevState: ActionResponse | null,
+  _prevState: AuthActionResponse | null,
   formData: FormData
-): Promise<ActionResponse<{ token: string; user: { id: number; username: string; role?: string } }>> {
+): Promise<AuthActionResponse> {
   const rawData = {
     username: formData.get('username'),
     password: formData.get('password'),
@@ -66,7 +73,7 @@ export async function loginAction(
         user: data.user,
       },
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error saat loginAction:', error);
     return {
       success: false,

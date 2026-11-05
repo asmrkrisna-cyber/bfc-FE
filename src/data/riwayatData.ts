@@ -20,4 +20,5 @@ export interface Transaction {
   cashGiven?: number;
   change?: number;
   voidReason?: string;
+  shiftId?: number | null;
 }

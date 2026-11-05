@@ -25,37 +25,33 @@ export default function POSPage() {
   const [isLoadingMenu, setIsLoadingMenu] = useState<boolean>(false);
 
   // Fetch menu dari backend Express MySQL (dengan auto-sync real-time dari Menu Management)
-  const fetchProducts = async () => {
-    try {
-      setIsLoadingMenu(true);
-      const res = await fetch(`${API_BASE_URL}/products`);
-      if (res.ok) {
-        const data = await res.json();
+  const loadProducts = () => {
+    fetch(`${API_BASE_URL}/products`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setMenuList(data);
         } else {
           setMenuList(ALL_MENU);
         }
-      } else {
+        setIsLoadingMenu(false);
+      })
+      .catch((err) => {
+        console.warn('Backend API tidak merespon, memuat menu lokal:', err);
         setMenuList(ALL_MENU);
-      }
-    } catch (err) {
-      console.warn('Backend API tidak merespon, memuat menu lokal:', err);
-      setMenuList(ALL_MENU);
-    } finally {
-      setIsLoadingMenu(false);
-    }
+        setIsLoadingMenu(false);
+      });
   };
 
   useEffect(() => {
-    fetchProducts();
+    loadProducts();
 
     // Sinkronisasi otomatis saat kasir kembali fokus ke tab POS
-    const handleFocus = () => fetchProducts();
+    const handleFocus = () => loadProducts();
     window.addEventListener('focus', handleFocus);
 
     // Sinkronisasi polling berkala setiap 8 detik agar perubahan Sold Out / Edit / Tambah / Hapus di Menu Management langsung realtime berubah di POS
-    const interval = setInterval(fetchProducts, 8000);
+    const interval = setInterval(loadProducts, 8000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
@@ -67,38 +63,40 @@ export default function POSPage() {
 
   // Fetch diskon aktif dari database
   useEffect(() => {
-    const fetchDiscounts = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/discounts`);
-        if (res.ok) {
-          const data = await res.json();
-          const activeOnly = data
-            .filter((d: any) => d.isActive)
-            .map((d: any) => ({
-              id: d.id,
-              name: `${d.name} (${d.type === 'PERCENTAGE' ? d.value + '%' : 'Rp ' + Number(d.value).toLocaleString('id-ID')})`,
-              type: d.type === 'PERCENTAGE' ? 'percent' : 'fixed',
-              value: Number(d.value),
-            }));
-          if (activeOnly.length > 0) {
-            setSavedDiscounts(activeOnly);
-          }
+    interface ApiDiscountItem {
+      id: string;
+      name: string;
+      type: string;
+      value: number;
+      isActive: boolean;
+    }
+    fetch(`${API_BASE_URL}/discounts`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data || !Array.isArray(data)) return;
+        const activeOnly = data
+          .filter((d: ApiDiscountItem) => d.isActive)
+          .map((d: ApiDiscountItem) => ({
+            id: d.id,
+            name: `${d.name} (${d.type === 'PERCENTAGE' ? d.value + '%' : 'Rp ' + Number(d.value).toLocaleString('id-ID')})`,
+            type: (d.type === 'PERCENTAGE' ? 'percent' : 'fixed') as 'percent' | 'fixed',
+            value: Number(d.value),
+          }));
+        if (activeOnly.length > 0) {
+          setSavedDiscounts(activeOnly);
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         console.warn('Gagal memuat diskon dari API:', err);
-      }
-    };
-
-    fetchDiscounts();
+      });
   }, []);
 
   useEffect(() => {
-    const checkActiveShift = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/shifts/active`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.active && data.shift) {
+    const checkActiveShift = () => {
+      fetch(`${API_BASE_URL}/shifts/active`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.active && data.shift) {
             const rawStatus = data.shift.shift_status || 'Opening';
             const status = rawStatus.includes('Shift') ? rawStatus : `Shift ${rawStatus} Aktif`;
             const text = `• ${status} (${data.shift.cashier_name})`;
@@ -109,19 +107,19 @@ export default function POSPage() {
             setIsShiftModalOpen(false);
             return;
           }
-        }
-        // Jika tidak ada shift aktif di database
-        setActiveShiftInfo('• Shift Belum Aktif');
-        localStorage.removeItem('active_shift_status');
-        setIsShiftModalOpen(true);
-      } catch (err) {
-        const savedShift = localStorage.getItem('active_shift_status');
-        if (savedShift) {
-          setActiveShiftInfo(savedShift);
-        } else {
+          // Jika tidak ada shift aktif di database
+          setActiveShiftInfo('• Shift Belum Aktif');
+          localStorage.removeItem('active_shift_status');
           setIsShiftModalOpen(true);
-        }
-      }
+        })
+        .catch(() => {
+          const savedShift = localStorage.getItem('active_shift_status');
+          if (savedShift) {
+            setActiveShiftInfo(savedShift);
+          } else {
+            setIsShiftModalOpen(true);
+          }
+        });
     };
 
     checkActiveShift();
@@ -391,7 +389,7 @@ export default function POSPage() {
             filteredMenu={filteredMenu}
             addToCart={addToCart}
             categories={dynamicCategories}
-            onRefresh={fetchProducts}
+            onRefresh={loadProducts}
             isLoading={isLoadingMenu}
           />
 

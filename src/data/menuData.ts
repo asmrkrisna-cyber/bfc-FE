@@ -3,9 +3,48 @@ export interface MenuItem {
   name: string;
   category: string;
   price: number;
-  description: string;
-  isAvailable: boolean;
+  description?: string;
+  isAvailable?: boolean;
 }
+
+export interface CartItem extends MenuItem {
+  cartItemId: string;
+  quantity: number;
+  note?: string;
+}
+
+export interface SavedDiscount {
+  id: string;
+  name: string;
+  type: 'percent' | 'fixed';
+  value: number;
+}
+
+export interface TransactionReceipt {
+  id: string;
+  date: string;
+  customerName: string;
+  tableNumber: string;
+  items: CartItem[];
+  subtotal: number;
+  discountType: 'percent' | 'fixed';
+  discountValue: number;
+  discountAmount: number;
+  discountName?: string;
+  tax: number;
+  total: number;
+  paymentMethod: 'Cash' | 'QRIS' | 'ShopeeFood';
+  cashGiven?: number;
+  change?: number;
+  isReprint?: boolean;
+}
+
+export const SAVED_DISCOUNTS: SavedDiscount[] = [
+  { id: 'disc-ktm', name: 'Diskon KTM (10%)', type: 'percent', value: 10 },
+  { id: 'disc-jumat', name: 'Promo Jumat Berkah (Rp 5.000)', type: 'fixed', value: 5000 },
+  { id: 'disc-vip', name: 'Member VIP (15%)', type: 'percent', value: 15 },
+  { id: 'disc-voucher', name: 'Voucher Pelanggan (Rp 2.000)', type: 'fixed', value: 2000 },
+];
 
 export const CATEGORIES = [
   'Semua',
@@ -100,3 +139,5 @@ export const INITIAL_MENU: MenuItem[] = [
   { id: '46', name: 'Mineral', category: 'Adds Ons', price: 5000, description: 'Air mineral botol.', isAvailable: true },
   { id: '47', name: 'Telur', category: 'Adds Ons', price: 5000, description: 'Extra tambahan telur.', isAvailable: true },
 ];
+
+export const ALL_MENU: MenuItem[] = INITIAL_MENU;
