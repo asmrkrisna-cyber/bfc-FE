@@ -34,7 +34,7 @@ export default function LoginForm() {
         </div>
       )}
 
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-4" suppressHydrationWarning>
         {/* Input Email Gmail */}
         <div className="space-y-1.5 text-left">
           <label className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">
@@ -46,6 +46,7 @@ export default function LoginForm() {
             placeholder="kasirbreakfree@gmail.com"
             required
             disabled={isPending}
+            suppressHydrationWarning
             className="w-full px-4 py-3 bg-[#121212] border border-[#2A2A2D] focus:border-[#D97706] rounded-xl text-xs text-white outline-none transition-all placeholder-[#48484A] disabled:opacity-50"
           />
           {state?.errors?.username && (
@@ -65,6 +66,7 @@ export default function LoginForm() {
             required
             minLength={6}
             disabled={isPending}
+            suppressHydrationWarning
             className="w-full px-4 py-3 bg-[#121212] border border-[#2A2A2D] focus:border-[#D97706] rounded-xl text-xs text-white outline-none transition-all placeholder-[#48484A] disabled:opacity-50"
           />
           {state?.errors?.password && (
@@ -76,6 +78,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
+          suppressHydrationWarning
           className="w-full py-3.5 bg-[#E65100] hover:bg-[#D84315] text-white rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isPending ? (
