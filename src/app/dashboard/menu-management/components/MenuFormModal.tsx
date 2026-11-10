@@ -51,9 +51,14 @@ export default function MenuFormModal({
               required
               placeholder="Contoh: Matcha Latte"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => {
+                // Hanya izinkan huruf alfabet dan spasi (tanpa angka)
+                const textOnly = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                setFormData({ ...formData, name: textOnly });
+              }}
               className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 focus:border-gray-900 rounded-xl text-xs text-gray-900 outline-none"
             />
+            <p className="text-[10px] text-gray-400">Hanya huruf alfabet (tanpa angka)</p>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-gray-500 uppercase">Kategori</label>
@@ -72,13 +77,19 @@ export default function MenuFormModal({
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-gray-500 uppercase">Harga (Rp)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               required
-              placeholder="20000"
+              placeholder="Contoh: 20000"
               value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              onChange={(e) => {
+                // Hanya izinkan angka (0-9)
+                const digitsOnly = e.target.value.replace(/\D/g, '');
+                setFormData({ ...formData, price: digitsOnly });
+              }}
               className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 focus:border-gray-900 rounded-xl text-xs text-gray-900 outline-none"
             />
+            <p className="text-[10px] text-gray-400">Hanya angka (tanpa titik atau koma)</p>
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-gray-500 uppercase">Deskripsi</label>

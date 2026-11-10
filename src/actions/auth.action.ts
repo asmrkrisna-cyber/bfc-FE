@@ -51,7 +51,7 @@ export async function loginAction(
     if (!res.ok) {
       return {
         success: false,
-        message: data.message || 'Username atau password salah!',
+        message: data.message || 'Email atau password salah!',
       };
     }
 

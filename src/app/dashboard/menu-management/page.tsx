@@ -102,7 +102,17 @@ export default function MenuManagementPage() {
 
   const handleSaveMenu = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.price) return;
+    const trimmedName = formData.name.trim();
+    if (!trimmedName || !/^[a-zA-Z\s]+$/.test(trimmedName)) {
+      alert('Nama menu hanya boleh berupa huruf alfabet (tidak boleh angka atau simbol).');
+      return;
+    }
+
+    const numericPrice = Number(formData.price);
+    if (!formData.price || isNaN(numericPrice) || numericPrice <= 0) {
+      alert('Harga menu harus berupa angka yang valid dan lebih dari 0.');
+      return;
+    }
 
     try {
       if (editingItem) {
@@ -110,9 +120,9 @@ export default function MenuManagementPage() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: formData.name,
+            name: trimmedName,
             category: formData.category,
-            price: Number(formData.price),
+            price: numericPrice,
             description: formData.description,
             isAvailable: editingItem.isAvailable,
           }),
@@ -129,9 +139,9 @@ export default function MenuManagementPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: formData.name,
+            name: trimmedName,
             category: formData.category,
-            price: Number(formData.price),
+            price: numericPrice,
             description: formData.description,
           }),
         });

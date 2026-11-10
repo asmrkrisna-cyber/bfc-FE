@@ -26,58 +26,65 @@ export default function MenuList({
   isLoading,
 }: MenuListProps) {
   return (
-    <main className="flex-1 p-6 overflow-y-auto space-y-6">
-      {/* KATEGORI SCROLL HORIZONTAL & SEARCH SEJAJAR */}
-      <div className="flex flex-row items-start justify-between gap-3 w-full">
-        {/* Kategori Pills dengan Bar Geser (Scrollbar) */}
-        <div 
-          onWheel={(e) => {
-            if (e.deltaY !== 0) {
-              e.currentTarget.scrollLeft += e.deltaY;
-            }
-          }}
-          className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto scroll-smooth pb-1.5"
-        >
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setSelectedCategory(cat)}
-              className={`h-9 px-4 flex items-center justify-center rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-colors cursor-pointer border ${
-                selectedCategory === cat
-                  ? 'bg-[#2C221E] text-white border-[#2C221E] shadow-xs'
-                  : 'bg-white border-[#EBE6DF] text-[#7B6E65] hover:bg-[#FAF7F2]'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+    <main className="flex-1 p-6 overflow-y-auto space-y-5">
+      {/* HEADER KONTROL: SEARCH BAR & REFRESH */}
+      <div className="flex items-center justify-between gap-3 w-full">
+        {/* Search Input Luas */}
+        <div className="relative flex-1">
+          <SearchIcon className="w-4 h-4 text-[#A89F91] absolute left-3.5 top-3 pointer-events-none" />
+          <input
+            type="text"
+            placeholder={selectedCategory === 'Semua' ? 'Cari nama produk / minuman...' : `Cari di kategori ${selectedCategory}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 bg-white border border-[#EBE6DF] rounded-xl text-xs text-[#2C221E] outline-none focus:border-[#6E5545] shadow-xs placeholder:text-gray-400 transition-colors"
+          />
         </div>
 
-        {/* Search Input & Refresh Button */}
-        <div className="flex items-center gap-2 shrink-0 w-64 md:w-72 lg:w-80 pt-0.5">
-          <div className="relative flex-1 min-w-0">
-            <SearchIcon className="w-3.5 h-3.5 text-[#A89F91] absolute left-3 top-2.5 pointer-events-none" />
-            <input
-              type="text"
-              placeholder={selectedCategory === 'Semua' ? 'Cari semua menu...' : `Cari di ${selectedCategory}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-8 pr-3 bg-white border border-[#EBE6DF] rounded-xl text-xs text-[#2C221E] outline-none focus:border-[#6E5545] shadow-xs placeholder:text-gray-400"
-            />
-          </div>
-          {onRefresh && (
-            <button
-              type="button"
-              onClick={onRefresh}
-              title="Perbarui data menu dari server"
-              disabled={isLoading}
-              className="h-9 px-3.5 bg-white hover:bg-[#F5F2EC] border border-[#EBE6DF] rounded-xl text-xs font-bold text-[#6E5545] flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50 shrink-0"
-            >
-              <RefreshIcon className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-          )}
+        {/* Refresh Button */}
+        {onRefresh && (
+          <button
+            type="button"
+            onClick={onRefresh}
+            title="Perbarui data menu dari server"
+            disabled={isLoading}
+            className="h-10 px-4 bg-white hover:bg-[#F5F2EC] border border-[#EBE6DF] rounded-xl text-xs font-bold text-[#6E5545] flex items-center gap-2 transition-all shadow-xs cursor-pointer disabled:opacity-50 shrink-0"
+          >
+            <RefreshIcon className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh Menu</span>
+          </button>
+        )}
+      </div>
+
+      {/* NAVIGASI KATEGORI WRAP (LANGSUNG TAMPIL SEMUA TANPA GESER/SCROLL) */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold tracking-wider text-[#7B6E65] uppercase">
+            Pilih Kategori Menu
+          </span>
+          <span className="text-[11px] text-[#A89F91]">
+            {categories.length} Kategori Tersedia
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 w-full">
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`h-9 px-3.5 flex items-center justify-center rounded-xl text-xs font-bold transition-all cursor-pointer border select-none ${
+                  isSelected
+                    ? 'bg-[#2C221E] text-white border-[#2C221E] shadow-sm ring-2 ring-[#2C221E]/10'
+                    : 'bg-white border-[#EBE6DF] text-[#7B6E65] hover:bg-[#FAF7F2] hover:text-[#2C221E] hover:border-[#D7CEC7]'
+                }`}
+              >
+                <span>{cat}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

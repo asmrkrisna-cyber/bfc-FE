@@ -17,7 +17,7 @@ export default function MenuFilterAndSearch({
 }: MenuFilterAndSearchProps) {
   return (
     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-      <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+      <div className="flex flex-wrap items-center gap-2 w-full md:flex-1">
         {categories.map((cat) => (
           <button
             key={cat}
