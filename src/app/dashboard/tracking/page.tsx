@@ -34,7 +34,7 @@ export default function KitchenTrackingPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const newOrders = orders.filter((o) => o.status === 'Baru');
+  const newOrders = orders.filter((o) => o.status === 'Baru' || o.status === 'Menunggu Bayar');
   const processingOrders = orders.filter((o) => o.status === 'Diproses');
   const readyOrders = orders.filter((o) => o.status === 'Siap Diambil');
 

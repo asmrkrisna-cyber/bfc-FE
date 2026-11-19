@@ -15,10 +15,21 @@ export default function OrderCard({
   onOpenCancelModal,
   onPickupOrder,
 }: OrderCardProps) {
+  const isWaitingCash =
+    order.status === 'Menunggu Bayar' ||
+    (order.isLiveApp &&
+      (order.paymentMethod?.toLowerCase() === 'cash' ||
+        order.paymentMethod?.toLowerCase() === 'tunai') &&
+      order.status === 'Baru');
+
   return (
     <div
       className={`bg-white rounded-2xl border p-4 shadow-xs space-y-3 relative transition-all ${
-        order.isOverdue ? 'border-red-300 ring-1 ring-red-200' : 'border-[#EBE6DF]'
+        order.isOverdue
+          ? 'border-red-300 ring-1 ring-red-200'
+          : isWaitingCash
+          ? 'border-amber-300 ring-1 ring-amber-200'
+          : 'border-[#EBE6DF]'
       }`}
     >
       <div className="flex justify-between items-start">
@@ -44,9 +55,16 @@ export default function OrderCard({
       </div>
 
       <div className="flex flex-wrap gap-1.5 text-[10px] font-bold">
-        <span className="bg-[#F5F2EC] text-[#6E5545] px-2 py-0.5 rounded-lg border border-[#EBE6DF]">
-          {order.paymentMethod}
-        </span>
+        {isWaitingCash ? (
+          <span className="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg flex items-center gap-1 animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            BELUM BAYAR (TUNAI DI KASIR)
+          </span>
+        ) : (
+          <span className="bg-[#F5F2EC] text-[#6E5545] px-2 py-0.5 rounded-lg border border-[#EBE6DF]">
+            {order.paymentMethod}
+          </span>
+        )}
         <span className="bg-[#F5F2EC] text-[#6E5545] px-2 py-0.5 rounded-lg border border-[#EBE6DF]">
           {order.orderType} {order.tableNumber ? `- ${order.tableNumber}` : ''}
         </span>
@@ -79,7 +97,26 @@ export default function OrderCard({
 
       {/* Tombol Aksi */}
       <div className="space-y-1.5 pt-1">
-        {order.status === 'Baru' && (
+        {isWaitingCash ? (
+          <>
+            <button
+              onClick={() => onUpdateStatus(order.id, 'Diproses')}
+              className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+            >
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Konfirmasi Bayar Tunai & Mulai Proses</span>
+            </button>
+            <button
+              onClick={() => onOpenCancelModal(order)}
+              className="w-full py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold border border-red-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <AlertIcon className="w-3.5 h-3.5 shrink-0" />
+              <span>Batalkan Pesanan</span>
+            </button>
+          </>
+        ) : order.status === 'Baru' ? (
           <>
             <button
               onClick={() => onUpdateStatus(order.id, 'Diproses')}
@@ -95,7 +132,7 @@ export default function OrderCard({
               <span>Batalkan Pesanan</span>
             </button>
           </>
-        )}
+        ) : null}
 
         {order.status === 'Diproses' && (
           <button

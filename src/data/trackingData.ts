@@ -13,7 +13,7 @@ export interface KitchenOrder {
   tableNumber?: string;
   paymentMethod: 'Cash' | 'QRIS' | 'App BreakFree';
   timeAgo: string;
-  status: 'Baru' | 'Diproses' | 'Siap Diambil';
+  status: 'Baru' | 'Diproses' | 'Siap Diambil' | 'Menunggu Bayar';
   isOverdue?: boolean;
   note?: string;
   items: OrderItem[];
