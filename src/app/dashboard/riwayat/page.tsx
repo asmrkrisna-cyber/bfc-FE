@@ -20,10 +20,16 @@ interface RawTransaction {
   subtotal?: number;
   discount_amount?: number;
   tax?: number;
+  tax_amount?: number;
   cash_given?: number;
   change_amount?: number;
   void_reason?: string;
   shift_id?: number | null;
+  order_source?: string;
+  order_type?: string;
+  voucher_code?: string;
+  voucher_discount?: number;
+  points_discount?: number;
 }
 
 interface RawTransactionItem {
@@ -53,13 +59,15 @@ export default function RiwayatPage() {
           data.map(async (tx) => {
             let itemsMapped: TransactionItem[] = [];
             try {
-              const resItems = await fetch(`${API_BASE_URL}/transactions/${tx.transaction_id}/items`);
+              const encodedId = encodeURIComponent(tx.transaction_id);
+              const resItems = await fetch(`${API_BASE_URL}/transactions/${encodedId}/items`);
               if (resItems.ok) {
-                const itemsData: RawTransactionItem[] = await resItems.json();
+                const itemsData: any[] = await resItems.json();
                 itemsMapped = itemsData.map((item) => ({
                   name: item.product_name || item.name || 'Produk',
-                  qty: item.quantity,
-                  price: item.price,
+                  qty: Number(item.quantity ?? item.qty) || 1,
+                  price: Number(item.price) || 0,
+                  note: item.note || item.options || undefined,
                 }));
               }
             } catch (err) {
@@ -77,12 +85,17 @@ export default function RiwayatPage() {
               total: tx.total || 0,
               subtotal: tx.subtotal || tx.total || 0,
               discount: tx.discount_amount || 0,
-              tax: tx.tax || 0,
+              tax: tx.tax || tx.tax_amount || 0,
               cashGiven: tx.cash_given || 0,
               change: tx.change_amount || 0,
               voidReason: tx.void_reason || '',
               items: itemsMapped,
               shiftId: tx.shift_id || null,
+              orderSource: tx.order_source || 'POS',
+              orderType: tx.order_type || (tx.table_number && tx.table_number !== '-' ? 'DINE_IN' : 'TAKEAWAY'),
+              voucherCode: tx.voucher_code || undefined,
+              voucherDiscount: tx.voucher_discount || 0,
+              pointsDiscount: tx.points_discount || 0,
             };
           })
         );

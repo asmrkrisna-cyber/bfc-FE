@@ -57,13 +57,31 @@ export default function TransactionDetail({
               <span className="font-bold font-mono">{selectedTx.id}</span>
             </div>
             <div className="flex justify-between">
+              <span className="text-[#7B6E65]">Sumber Pesanan:</span>
+              <span className={`font-bold px-2 py-0.2 rounded-full text-[10px] ${
+                selectedTx.orderSource === 'MOBILE'
+                  ? 'bg-violet-100 text-violet-800 border border-violet-200'
+                  : 'bg-amber-100 text-amber-800 border border-amber-200'
+              }`}>
+                {selectedTx.orderSource === 'MOBILE' ? 'Aplikasi Pelanggan (Mobile)' : 'Mesin Kasir (POS)'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#7B6E65]">Tipe Pesanan:</span>
+              <span className="font-semibold">
+                {selectedTx.orderType === 'TAKEAWAY' ? 'Takeaway (Bawa Pulang)' : 'Dine-in (Self Pick-Up)'}
+              </span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-[#7B6E65]">Pelanggan:</span>
               <span className="font-semibold">{selectedTx.customerName || 'Tamu / Umum'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[#7B6E65]">No. Meja:</span>
-              <span className="font-semibold">{selectedTx.tableNumber || '-'}</span>
-            </div>
+            {selectedTx.tableNumber && selectedTx.tableNumber !== '-' && (
+              <div className="flex justify-between">
+                <span className="text-[#7B6E65]">No. Meja:</span>
+                <span className="font-semibold">{selectedTx.tableNumber}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-[#7B6E65]">Metode Bayar:</span>
               <span className="font-semibold">{selectedTx.paymentMethod}</span>
@@ -78,11 +96,16 @@ export default function TransactionDetail({
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {selectedTx.items?.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-xs items-start">
-                  <span className={`text-[#2C221E] font-medium ${isVoid ? 'line-through text-gray-400' : ''}`}>
-                    {item.name} <span className="text-[#7B6E65] font-normal">x{item.qty}</span>
-                  </span>
-                  <span className={`font-semibold ${isVoid ? 'text-gray-400' : 'text-[#2C221E]'}`}>
-                    Rp {(item.price * item.qty).toLocaleString('id-ID')}
+                  <div className="flex flex-col">
+                    <span className={`text-[#2C221E] font-medium ${isVoid ? 'line-through text-gray-400' : ''}`}>
+                      {item.name} <span className="text-[#7B6E65] font-normal">x{item.qty || 1}</span>
+                    </span>
+                    {item.note && (
+                      <span className="text-[10px] text-[#A89F91] italic">{item.note}</span>
+                    )}
+                  </div>
+                  <span className={`font-semibold shrink-0 ml-2 ${isVoid ? 'text-gray-400' : 'text-[#2C221E]'}`}>
+                    Rp {((Number(item.price) || 0) * (Number(item.qty) || 1)).toLocaleString('id-ID')}
                   </span>
                 </div>
               ))}
@@ -98,11 +121,27 @@ export default function TransactionDetail({
               </span>
             </div>
 
-            {selectedTx.discount ? selectedTx.discount > 0 && (
-              <div className="flex justify-between text-red-600">
-                <span>Diskon</span>
-                <span className="font-medium">-Rp {selectedTx.discount.toLocaleString('id-ID')}</span>
+            {selectedTx.voucherDiscount ? (
+              <div className="flex justify-between text-emerald-700">
+                <span>Diskon Voucher {selectedTx.voucherCode ? `(${selectedTx.voucherCode})` : ''}</span>
+                <span className="font-medium">-Rp {selectedTx.voucherDiscount.toLocaleString('id-ID')}</span>
               </div>
+            ) : null}
+
+            {selectedTx.pointsDiscount ? (
+              <div className="flex justify-between text-amber-700">
+                <span>Potongan Poin Loyalty</span>
+                <span className="font-medium">-Rp {selectedTx.pointsDiscount.toLocaleString('id-ID')}</span>
+              </div>
+            ) : null}
+
+            {!selectedTx.voucherDiscount && !selectedTx.pointsDiscount && selectedTx.discount ? (
+              selectedTx.discount > 0 && (
+                <div className="flex justify-between text-red-600">
+                  <span>Diskon Promo</span>
+                  <span className="font-medium">-Rp {selectedTx.discount.toLocaleString('id-ID')}</span>
+                </div>
+              )
             ) : null}
 
             <div className="flex justify-between text-[#7B6E65]">

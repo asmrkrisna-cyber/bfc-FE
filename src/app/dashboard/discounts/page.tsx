@@ -5,10 +5,12 @@ import { DiscountItem } from '@/data/discountData';
 import { API_BASE_URL } from '@/utils/api';
 import DiscountCard from './components/DiscountCard';
 import AddDiscountForm from './components/AddDiscountForm';
+import EditDiscountCard from './components/EditDiscountCard';
 
 export default function DiscountPage() {
   const [discounts, setDiscounts] = useState<DiscountItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingItem, setEditingItem] = useState<DiscountItem | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const loadDiscounts = () => {
@@ -97,7 +99,40 @@ export default function DiscountPage() {
     }
   };
 
+  const handleUpdateDiscount = async (
+    id: string,
+    data: {
+      code: string;
+      name: string;
+      type: 'PERCENTAGE' | 'FIXED';
+      value: number;
+      minPurchase: number;
+      maxDiscount?: number | null;
+      description?: string;
+    }
+  ) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/discounts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        setEditingItem(null);
+        loadDiscounts();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert(errorData.message || 'Gagal memperbarui diskon.');
+      }
+    } catch (err) {
+      console.error('Gagal update diskon:', err);
+      alert('Terjadi kesalahan koneksi ke server.');
+    }
+  };
+
   const handleDelete = async (id: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus diskon ini?')) return;
     try {
       const res = await fetch(`${API_BASE_URL}/discounts/${id}`, {
         method: 'DELETE',
@@ -119,7 +154,9 @@ export default function DiscountPage() {
       <header className="p-4 border-b border-[#EBE6DF] bg-white flex items-center justify-between shadow-xs sticky top-0 z-20 pl-20">
         <div>
           <h1 className="text-lg font-bold text-[#2C221E]">Manajemen Diskon & Voucher</h1>
-          <p className="text-[11px] text-[#7B6E65]">Kelola kode promo, diskon persentase, atau potongan harga langsung yang tersimpan di MySQL</p>
+          <p className="text-[11px] text-[#7B6E65]">
+            Kelola kode promo, diskon persentase, atau potongan harga langsung (Sync POS ↔ Mobile)
+          </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
@@ -142,6 +179,7 @@ export default function DiscountPage() {
                 item={item}
                 onToggleActive={handleToggleActive}
                 onDelete={handleDelete}
+                onEdit={(selected) => setEditingItem(selected)}
               />
             ))}
           </div>
@@ -158,6 +196,13 @@ export default function DiscountPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddDiscount}
+      />
+
+      <EditDiscountCard
+        isOpen={!!editingItem}
+        item={editingItem}
+        onClose={() => setEditingItem(null)}
+        onSave={handleUpdateDiscount}
       />
     </div>
   );

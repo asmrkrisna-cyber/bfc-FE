@@ -5,9 +5,10 @@ interface DiscountCardProps {
   item: DiscountItem;
   onToggleActive: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (item: DiscountItem) => void;
 }
 
-export default function DiscountCard({ item, onToggleActive, onDelete }: DiscountCardProps) {
+export default function DiscountCard({ item, onToggleActive, onDelete, onEdit }: DiscountCardProps) {
   return (
     <div
       className={`bg-white border rounded-2xl p-5 shadow-xs flex flex-col justify-between transition-all ${
@@ -28,8 +29,12 @@ export default function DiscountCard({ item, onToggleActive, onDelete }: Discoun
           </span>
         </div>
         <h3 className="text-sm font-bold text-[#2C221E]">{item.name}</h3>
+        {item.description && (
+          <p className="text-[11px] text-[#7B6E65] line-clamp-2">{item.description}</p>
+        )}
         <p className="text-xs font-bold text-emerald-700">
           {item.type === 'PERCENTAGE' ? `Diskon ${item.value}%` : `Potongan Rp ${item.value.toLocaleString('id-ID')}`}
+          {item.type === 'PERCENTAGE' && item.maxDiscount ? ` (Maks Rp ${item.maxDiscount.toLocaleString('id-ID')})` : ''}
         </p>
         <p className="text-[10px] text-[#7B6E65]">
           Min. Belanja: Rp {item.minPurchase.toLocaleString('id-ID')}
@@ -43,12 +48,22 @@ export default function DiscountCard({ item, onToggleActive, onDelete }: Discoun
         >
           {item.isActive ? 'Nonaktifkan' : 'Aktifkan'}
         </button>
-        <button
-          onClick={() => onDelete(item.id)}
-          className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-medium cursor-pointer border border-red-200"
-        >
-          Hapus
-        </button>
+        <div className="flex items-center gap-1.5">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(item)}
+              className="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-[#2C221E] rounded-lg text-xs font-medium cursor-pointer border border-stone-200"
+            >
+              Edit
+            </button>
+          )}
+          <button
+            onClick={() => onDelete(item.id)}
+            className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-medium cursor-pointer border border-red-200"
+          >
+            Hapus
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ export interface TransactionItem {
   name: string;
   qty: number;
   price: number;
+  note?: string;
 }
 
 export interface Transaction {
@@ -21,4 +22,9 @@ export interface Transaction {
   change?: number;
   voidReason?: string;
   shiftId?: number | null;
+  orderSource?: 'POS' | 'MOBILE' | string;
+  orderType?: 'DINE_IN' | 'TAKEAWAY' | string;
+  voucherCode?: string;
+  voucherDiscount?: number;
+  pointsDiscount?: number;
 }

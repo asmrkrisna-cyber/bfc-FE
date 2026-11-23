@@ -116,7 +116,7 @@ export default function TransactionList({
             >
               {/* Info Utama */}
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span className="font-mono font-bold text-xs text-[#2C221E]">{tx.id}</span>
                   <span
                     className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
@@ -127,6 +127,20 @@ export default function TransactionList({
                   >
                     {isVoid ? 'VOID' : 'SUKSES'}
                   </span>
+                  {tx.orderSource === 'MOBILE' ? (
+                    <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-violet-100 text-violet-800 border border-violet-200">
+                      App Mobile
+                    </span>
+                  ) : (
+                    <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                      Kasir POS
+                    </span>
+                  )}
+                  {tx.orderType && (
+                    <span className="text-[9px] px-2 py-0.5 rounded-full font-medium bg-[#F5F2EC] text-[#6E5545] border border-[#EBE6DF]">
+                      {tx.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-in'}
+                    </span>
+                  )}
                   {tx.tableNumber && tx.tableNumber !== '-' && (
                     <span className="text-[10px] px-1.5 py-0.2 bg-stone-100 text-[#7B6E65] rounded font-medium">
                       Meja: {tx.tableNumber}

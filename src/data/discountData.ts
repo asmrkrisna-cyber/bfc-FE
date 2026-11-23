@@ -5,6 +5,8 @@ export interface DiscountItem {
   type: 'PERCENTAGE' | 'FIXED';
   value: number;
   minPurchase: number;
+  maxDiscount?: number | null;
+  description?: string | null;
   isActive: boolean;
 }
 

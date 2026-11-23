@@ -53,13 +53,27 @@ export default function ReprintModal({ selectedTx, onClose, onPrint }: ReprintMo
             <span className="font-mono font-bold text-[#2C221E]">{selectedTx.id}</span>
           </div>
           <div className="flex justify-between">
+            <span className="font-bold text-[#2C221E]">Sumber:</span>
+            <span className="font-semibold text-[#2C221E]">
+              {selectedTx.orderSource === 'MOBILE' ? 'Aplikasi Mobile' : 'Kasir POS'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-bold text-[#2C221E]">Tipe:</span>
+            <span className="font-semibold text-[#2C221E]">
+              {selectedTx.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-in (Self Pick-Up)'}
+            </span>
+          </div>
+          <div className="flex justify-between">
             <span className="font-bold text-[#2C221E]">Pelanggan:</span>
             <span>{selectedTx.customerName || 'Tamu / Umum'}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="font-bold text-[#2C221E]">No. Meja:</span>
-            <span>{selectedTx.tableNumber || '-'}</span>
-          </div>
+          {selectedTx.tableNumber && selectedTx.tableNumber !== '-' && (
+            <div className="flex justify-between">
+              <span className="font-bold text-[#2C221E]">No. Meja:</span>
+              <span>{selectedTx.tableNumber}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="font-bold text-[#2C221E]">Metode Bayar:</span>
             <span className="font-semibold text-[#2C221E]">{selectedTx.paymentMethod}</span>
@@ -85,11 +99,16 @@ export default function ReprintModal({ selectedTx, onClose, onPrint }: ReprintMo
         <div className="space-y-2 max-h-40 overflow-y-auto text-xs border-b border-dashed border-[#EBE6DF] pb-3 pr-1">
           {selectedTx.items.map((item, idx) => (
             <div key={idx} className="flex justify-between items-start">
-              <span className={`text-[#2C221E] ${isVoid ? 'line-through text-gray-400' : ''}`}>
-                {item.name} <span className="text-[#7B6E65] font-normal">x{item.qty}</span>
-              </span>
-              <span className={`font-semibold ${isVoid ? 'text-gray-400' : 'text-[#2C221E]'}`}>
-                Rp {(item.price * item.qty).toLocaleString('id-ID')}
+              <div className="flex flex-col">
+                <span className={`text-[#2C221E] ${isVoid ? 'line-through text-gray-400' : ''}`}>
+                  {item.name} <span className="text-[#7B6E65] font-normal">x{item.qty || 1}</span>
+                </span>
+                {item.note && (
+                  <span className="text-[10px] text-[#A89F91] italic">{item.note}</span>
+                )}
+              </div>
+              <span className={`font-semibold shrink-0 ml-2 ${isVoid ? 'text-gray-400' : 'text-[#2C221E]'}`}>
+                Rp {((Number(item.price) || 0) * (Number(item.qty) || 1)).toLocaleString('id-ID')}
               </span>
             </div>
           ))}
@@ -104,11 +123,27 @@ export default function ReprintModal({ selectedTx, onClose, onPrint }: ReprintMo
             </span>
           </div>
 
-          {selectedTx.discount ? selectedTx.discount > 0 && (
-            <div className="flex justify-between text-red-600">
-              <span>Diskon</span>
-              <span className="font-medium">-Rp {selectedTx.discount.toLocaleString('id-ID')}</span>
+          {selectedTx.voucherDiscount ? (
+            <div className="flex justify-between text-emerald-700">
+              <span>Diskon Voucher {selectedTx.voucherCode ? `(${selectedTx.voucherCode})` : ''}</span>
+              <span className="font-medium">-Rp {selectedTx.voucherDiscount.toLocaleString('id-ID')}</span>
             </div>
+          ) : null}
+
+          {selectedTx.pointsDiscount ? (
+            <div className="flex justify-between text-amber-700">
+              <span>Potongan Poin</span>
+              <span className="font-medium">-Rp {selectedTx.pointsDiscount.toLocaleString('id-ID')}</span>
+            </div>
+          ) : null}
+
+          {!selectedTx.voucherDiscount && !selectedTx.pointsDiscount && selectedTx.discount ? (
+            selectedTx.discount > 0 && (
+              <div className="flex justify-between text-red-600">
+                <span>Diskon</span>
+                <span className="font-medium">-Rp {selectedTx.discount.toLocaleString('id-ID')}</span>
+              </div>
+            )
           ) : null}
 
           <div className="flex justify-between text-[#7B6E65]">
