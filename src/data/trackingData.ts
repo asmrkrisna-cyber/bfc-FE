@@ -6,6 +6,8 @@ export interface OrderItem {
 
 export interface KitchenOrder {
   id: string;
+  rawId?: number;
+  transactionId?: string;
   customerName: string;
   source: 'Kasir' | 'App BreakFree';
   isLiveApp?: boolean;
@@ -18,6 +20,32 @@ export interface KitchenOrder {
   note?: string;
   items: OrderItem[];
   cancelReason?: string;
+}
+
+/**
+ * Resolves the safest unique identifier for backend status/cancel mutations
+ * (prefers primary key `rawId`, then unique `transactionId`, then `id`).
+ */
+export function getKitchenOrderActionId(
+  order: Pick<KitchenOrder, 'id' | 'rawId' | 'transactionId'>
+): string {
+  if (order.rawId !== undefined && order.rawId !== null) {
+    return String(order.rawId);
+  }
+  return order.transactionId || order.id;
+}
+
+/**
+ * Generates a collision-free React list key even when queue numbers (`order.id`, e.g. `A-26`) repeat across orders.
+ */
+export function getKitchenOrderKey(
+  order: Pick<KitchenOrder, 'id' | 'rawId' | 'transactionId'>,
+  index: number
+): string {
+  if (order.rawId !== undefined && order.rawId !== null) {
+    return `ko-${order.rawId}`;
+  }
+  return `${order.transactionId || 'local'}-${order.id}-${index}`;
 }
 
 export const INITIAL_KITCHEN_ORDERS: KitchenOrder[] = [

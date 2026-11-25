@@ -22,6 +22,7 @@ export default function ShiftHistoryTable({ history }: ShiftHistoryTableProps) {
               <th className="p-3 text-right">Total Tunai</th>
               <th className="p-3 text-right">Total QRIS</th>
               <th className="p-3 text-right">Total ShopeeFood</th>
+              <th className="p-3 text-right text-[#6E5545]">BreakFree Hub</th>
               <th className="p-3 text-right text-red-600">Pajak (10%)</th>
               <th className="p-3 text-right font-bold">Pendapatan Murni</th>
               <th className="p-3 text-right font-bold">Kas Fisik Akhir</th>
@@ -30,7 +31,7 @@ export default function ShiftHistoryTable({ history }: ShiftHistoryTableProps) {
           <tbody className="divide-y divide-[#EBE6DF] text-[#2C221E]">
             {!history || history.length === 0 ? (
               <tr>
-                <td colSpan={10} className="p-4 text-center text-gray-400">
+                <td colSpan={11} className="p-4 text-center text-gray-400">
                   Belum ada riwayat shift yang ditutup.
                 </td>
               </tr>
@@ -42,6 +43,8 @@ export default function ShiftHistoryTable({ history }: ShiftHistoryTableProps) {
                 const endTime = item.end_time
                   ? new Date(item.end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
                   : 'Selesai';
+                const hubAmount = Number(item.total_breakfree_hub || item.totalBreakfreeHub || 0);
+                const hubCount = Number(item.count_breakfree_hub || item.countBreakfreeHub || 0);
 
                 return (
                   <tr key={item.id || idx} className="hover:bg-[#FDFBF7]/60 transition-all">
@@ -56,6 +59,12 @@ export default function ShiftHistoryTable({ history }: ShiftHistoryTableProps) {
                     <td className="p-3 text-right">Rp {Number(item.total_cash || item.totalCash || 0).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-right">Rp {Number(item.total_qris || item.totalQRIS || 0).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-right">Rp {Number(item.total_shopeefood || item.totalShopeeFood || 0).toLocaleString('id-ID')}</td>
+                    <td className="p-3 text-right">
+                      <div className="font-semibold text-[#4A372B]">
+                        Rp {hubAmount.toLocaleString('id-ID')}
+                      </div>
+                      <div className="text-[10px] text-[#7B6E65]">{hubCount} pesanan</div>
+                    </td>
                     <td className="p-3 text-right text-red-600">- Rp {Number(item.tax_amount || item.tax || 0).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-right font-bold">Rp {Number(item.net_revenue || item.netRevenue || 0).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-right font-bold text-amber-900">

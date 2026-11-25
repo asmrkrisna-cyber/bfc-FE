@@ -11,6 +11,8 @@ interface ThermalReceiptModalProps {
   revenueCash: number;
   revenueQRIS: number;
   revenueShopeeFood: number;
+  revenueBreakfreeHub: number;
+  breakfreeHubCount?: number;
   totalTax: number;
   totalOmset: number;
   netRevenue: number;
@@ -28,6 +30,8 @@ export default function ThermalReceiptModal({
   revenueCash,
   revenueQRIS,
   revenueShopeeFood,
+  revenueBreakfreeHub,
+  breakfreeHubCount = 0,
   totalTax,
   totalOmset,
   netRevenue,
@@ -77,16 +81,20 @@ export default function ThermalReceiptModal({
             <span>Rekapitulasi Kas</span>
           </p>
           <div className="flex justify-between">
-            <span>Tunai (Cash)</span>
+            <span>Tunai (Cash POS)</span>
             <span className="font-bold text-[#2C221E]">Rp {revenueCash.toLocaleString('id-ID')}</span>
           </div>
           <div className="flex justify-between">
-            <span>QRIS</span>
+            <span>QRIS (POS)</span>
             <span className="font-bold text-[#2C221E]">Rp {revenueQRIS.toLocaleString('id-ID')}</span>
           </div>
           <div className="flex justify-between">
             <span>ShopeeFood</span>
             <span className="font-bold text-[#2C221E]">Rp {revenueShopeeFood.toLocaleString('id-ID')}</span>
+          </div>
+          <div className="flex justify-between text-[#4A372B] font-medium">
+            <span>BreakFree Hub ({breakfreeHubCount} trx)</span>
+            <span className="font-bold text-[#2C221E]">Rp {revenueBreakfreeHub.toLocaleString('id-ID')}</span>
           </div>
           <div className="flex justify-between text-red-600 font-medium pt-1 border-t border-dashed border-[#EBE6DF]">
             <span>Pajak (10%)</span>

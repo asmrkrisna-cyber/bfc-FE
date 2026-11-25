@@ -9,7 +9,9 @@ interface ReprintModalProps {
 }
 
 export default function ReprintModal({ selectedTx, onClose, onPrint }: ReprintModalProps) {
-  const isVoid = selectedTx.status?.toUpperCase().includes('VOID');
+  const isVoid = ['VOID', 'CANCELLED', 'DIBATALKAN'].some((k) =>
+    (selectedTx.status || '').toUpperCase().includes(k)
+  );
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">

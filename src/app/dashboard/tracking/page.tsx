@@ -1,7 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { KitchenOrder } from '@/data/trackingData';
+import {
+  KitchenOrder,
+  getKitchenOrderActionId,
+  getKitchenOrderKey,
+} from '@/data/trackingData';
 import { API_BASE_URL } from '@/utils/api';
 
 import OrderCard from './components/OrderCard';
@@ -11,88 +15,159 @@ export default function KitchenTrackingPage() {
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [selectedCancelOrder, setSelectedCancelOrder] = useState<KitchenOrder | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const loadKitchenOrders = () => {
-    fetch(`${API_BASE_URL}/kitchen-orders`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) {
-          setOrders(data);
+  const loadKitchenOrders = useCallback(async () => {
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/kitchen-orders`, {
+        signal: controller.signal,
+        cache: 'no-store',
+      });
+
+      if (!res.ok) {
+        let serverMsg = `Gagal memuat pesanan dapur (HTTP ${res.status}).`;
+        try {
+          const errJson = await res.json();
+          if (errJson?.message) serverMsg = String(errJson.message);
+        } catch {
+          // Abaikan bila body bukan JSON
+        }
+        if (isMountedRef.current) {
+          setConnectionError(serverMsg);
           setIsLoading(false);
         }
-      })
-      .catch((err) => {
-        console.error('Gagal mengambil pesanan dapur:', err);
+        return;
+      }
+
+      const data = await res.json();
+      if (isMountedRef.current) {
+        if (Array.isArray(data)) {
+          setOrders(data);
+        }
+        setConnectionError(null);
         setIsLoading(false);
-      });
-  };
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      if (isMountedRef.current) {
+        setConnectionError(
+          'Tidak dapat terhubung ke server backend. Memeriksa ulang otomatis setiap 5 detik...'
+        );
+        setIsLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    loadKitchenOrders();
+    isMountedRef.current = true;
+    const initialTimer = setTimeout(() => {
+      void loadKitchenOrders();
+    }, 0);
     // Auto-polling antrian dapur setiap 5 detik agar pesanan dari Kasir langsung muncul
-    const interval = setInterval(loadKitchenOrders, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(() => {
+      void loadKitchenOrders();
+    }, 5000);
+
+    return () => {
+      isMountedRef.current = false;
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+      abortControllerRef.current?.abort();
+    };
+  }, [loadKitchenOrders]);
 
   const newOrders = orders.filter((o) => o.status === 'Baru' || o.status === 'Menunggu Bayar');
   const processingOrders = orders.filter((o) => o.status === 'Diproses');
   const readyOrders = orders.filter((o) => o.status === 'Siap Diambil');
 
-  const handleUpdateStatus = async (id: string, nextStatus: KitchenOrder['status']) => {
+  const handleUpdateStatus = async (targetOrder: KitchenOrder, nextStatus: KitchenOrder['status']) => {
+    const targetActionId = getKitchenOrderActionId(targetOrder);
     // Optimistic UI update
     setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: nextStatus } : o))
+      prev.map((o) =>
+        getKitchenOrderActionId(o) === targetActionId ? { ...o, status: nextStatus } : o
+      )
     );
 
     try {
-      const encodedId = encodeURIComponent(id);
-      await fetch(`${API_BASE_URL}/kitchen-orders/${encodedId}/status`, {
+      const encodedId = encodeURIComponent(targetActionId);
+      const res = await fetch(`${API_BASE_URL}/kitchen-orders/${encodedId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: nextStatus }),
       });
-      loadKitchenOrders();
-    } catch (err) {
-      console.error('Gagal update status pesanan dapur:', err);
-      loadKitchenOrders();
+      if (!res.ok) {
+        setConnectionError('Gagal memperbarui status pesanan dapur di server.');
+      }
+    } catch {
+      setConnectionError('Koneksi ke server terputus saat memperbarui status pesanan.');
+    } finally {
+      void loadKitchenOrders();
     }
   };
 
-  const handlePickupOrder = async (id: string) => {
+  const handlePickupOrder = async (targetOrder: KitchenOrder) => {
+    const targetActionId = getKitchenOrderActionId(targetOrder);
     // Optimistic UI update: hapus dari antrian aktif saat selesai diambil
-    setOrders((prev) => prev.filter((o) => o.id !== id));
+    setOrders((prev) => prev.filter((o) => getKitchenOrderActionId(o) !== targetActionId));
 
     try {
-      const encodedId = encodeURIComponent(id);
-      await fetch(`${API_BASE_URL}/kitchen-orders/${encodedId}/status`, {
+      const encodedId = encodeURIComponent(targetActionId);
+      const res = await fetch(`${API_BASE_URL}/kitchen-orders/${encodedId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'Selesai' }),
       });
-    } catch (err) {
-      console.error('Gagal menandai pesanan selesai:', err);
-      loadKitchenOrders();
+      if (!res.ok) {
+        setConnectionError('Gagal menandai pesanan selesai di server.');
+        void loadKitchenOrders();
+      }
+    } catch {
+      setConnectionError('Koneksi ke server terputus saat menandai pesanan selesai.');
+      void loadKitchenOrders();
     }
   };
 
   const handleConfirmCancel = async (reason: string) => {
     if (!selectedCancelOrder) return;
-    const targetId = selectedCancelOrder.id;
-    setOrders((prev) => prev.filter((o) => o.id !== targetId));
+    const targetActionId = getKitchenOrderActionId(selectedCancelOrder);
+    setOrders((prev) => prev.filter((o) => getKitchenOrderActionId(o) !== targetActionId));
     setSelectedCancelOrder(null);
 
     try {
-      const encodedId = encodeURIComponent(targetId);
-      await fetch(`${API_BASE_URL}/kitchen-orders/${encodedId}/cancel`, {
+      const encodedId = encodeURIComponent(targetActionId);
+      const res = await fetch(`${API_BASE_URL}/kitchen-orders/${encodedId}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason }),
       });
-    } catch (err) {
-      console.error('Gagal membatalkan pesanan dapur:', err);
-      loadKitchenOrders();
+      if (!res.ok) {
+        setConnectionError('Gagal membatalkan pesanan dapur di server.');
+        void loadKitchenOrders();
+      }
+    } catch {
+      setConnectionError('Koneksi ke server terputus saat membatalkan pesanan.');
+      void loadKitchenOrders();
     }
   };
+
+  const renderOrderCard = (order: KitchenOrder, index: number) => (
+    <OrderCard
+      key={getKitchenOrderKey(order, index)}
+      order={order}
+      onUpdateStatus={(_id, nextStatus) => handleUpdateStatus(order, nextStatus)}
+      onOpenCancelModal={setSelectedCancelOrder}
+      onPickupOrder={() => handlePickupOrder(order)}
+    />
+  );
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#2C221E] flex flex-col relative">
@@ -114,6 +189,18 @@ export default function KitchenTrackingPage() {
       </header>
 
       <main className="p-6 space-y-6 flex-1 max-w-7xl mx-auto w-full">
+        {connectionError && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+            <span>{connectionError}</span>
+            <button
+              type="button"
+              onClick={() => void loadKitchenOrders()}
+              className="rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white hover:bg-amber-700 transition-colors cursor-pointer"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        )}
         {isLoading ? (
           <div className="text-center py-12 text-sm text-[#7B6E65]">Memuat pesanan dapur dari server...</div>
         ) : (
@@ -133,15 +220,7 @@ export default function KitchenTrackingPage() {
                 {newOrders.length === 0 ? (
                   <p className="text-xs text-[#7B6E65] italic text-center py-8">Tidak ada pesanan baru</p>
                 ) : (
-                  newOrders.map((order) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      onUpdateStatus={handleUpdateStatus}
-                      onOpenCancelModal={setSelectedCancelOrder}
-                      onPickupOrder={handlePickupOrder}
-                    />
-                  ))
+                  newOrders.map(renderOrderCard)
                 )}
               </div>
             </div>
@@ -161,15 +240,7 @@ export default function KitchenTrackingPage() {
                 {processingOrders.length === 0 ? (
                   <p className="text-xs text-[#7B6E65] italic text-center py-8">Belum ada pesanan diracik</p>
                 ) : (
-                  processingOrders.map((order) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      onUpdateStatus={handleUpdateStatus}
-                      onOpenCancelModal={setSelectedCancelOrder}
-                      onPickupOrder={handlePickupOrder}
-                    />
-                  ))
+                  processingOrders.map(renderOrderCard)
                 )}
               </div>
             </div>
@@ -189,15 +260,7 @@ export default function KitchenTrackingPage() {
                 {readyOrders.length === 0 ? (
                   <p className="text-xs text-[#7B6E65] italic text-center py-8">Tidak ada pesanan menunggu</p>
                 ) : (
-                  readyOrders.map((order) => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      onUpdateStatus={handleUpdateStatus}
-                      onPickupOrder={handlePickupOrder}
-                      onOpenCancelModal={setSelectedCancelOrder}
-                    />
-                  ))
+                  readyOrders.map(renderOrderCard)
                 )}
               </div>
             </div>

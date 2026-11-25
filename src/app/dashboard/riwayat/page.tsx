@@ -24,6 +24,8 @@ interface RawTransaction {
   cash_given?: number;
   change_amount?: number;
   void_reason?: string;
+  cancel_reason?: string;
+  cashier_name?: string;
   shift_id?: number | null;
   order_source?: string;
   order_type?: string;
@@ -35,8 +37,11 @@ interface RawTransaction {
 interface RawTransactionItem {
   product_name?: string;
   name?: string;
-  quantity: number;
-  price: number;
+  quantity?: number;
+  qty?: number;
+  price?: number;
+  note?: string;
+  options?: string;
 }
 
 export default function RiwayatPage() {
@@ -62,7 +67,7 @@ export default function RiwayatPage() {
               const encodedId = encodeURIComponent(tx.transaction_id);
               const resItems = await fetch(`${API_BASE_URL}/transactions/${encodedId}/items`);
               if (resItems.ok) {
-                const itemsData: any[] = await resItems.json();
+                const itemsData: RawTransactionItem[] = await resItems.json();
                 itemsMapped = itemsData.map((item) => ({
                   name: item.product_name || item.name || 'Produk',
                   qty: Number(item.quantity ?? item.qty) || 1,
@@ -88,7 +93,7 @@ export default function RiwayatPage() {
               tax: tx.tax || tx.tax_amount || 0,
               cashGiven: tx.cash_given || 0,
               change: tx.change_amount || 0,
-              voidReason: tx.void_reason || '',
+              voidReason: tx.cancel_reason || tx.void_reason || '',
               items: itemsMapped,
               shiftId: tx.shift_id || null,
               orderSource: tx.order_source || 'POS',

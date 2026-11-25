@@ -21,6 +21,8 @@ export default function RekapShiftPage() {
   const [revenueCash, setRevenueCash] = useState<number>(0);
   const [revenueQRIS, setRevenueQRIS] = useState<number>(0);
   const [revenueShopeeFood, setRevenueShopeeFood] = useState<number>(0);
+  const [revenueBreakfreeHub, setRevenueBreakfreeHub] = useState<number>(0);
+  const [breakfreeHubCount, setBreakfreeHubCount] = useState<number>(0);
   const [totalTax, setTotalTax] = useState<number>(0);
   const [totalOmset, setTotalOmset] = useState<number>(0);
   const [netRevenue, setNetRevenue] = useState<number>(0);
@@ -53,6 +55,8 @@ export default function RekapShiftPage() {
           setRevenueCash(Number(data.totalCash) || 0);
           setRevenueQRIS(Number(data.totalQRIS) || 0);
           setRevenueShopeeFood(Number(data.totalShopeeFood) || 0);
+          setRevenueBreakfreeHub(Number(data.totalBreakfreeHub) || 0);
+          setBreakfreeHubCount(Number(data.countBreakfreeHub) || 0);
           setTotalOmset(Number(data.grandTotal) || 0);
           setTotalTax(Number(data.tax) || 0);
           setNetRevenue(Number(data.netRevenue) || 0);
@@ -138,6 +142,8 @@ export default function RekapShiftPage() {
         setRevenueCash(0);
         setRevenueQRIS(0);
         setRevenueShopeeFood(0);
+        setRevenueBreakfreeHub(0);
+        setBreakfreeHubCount(0);
         setTotalOmset(0);
         setTotalTax(0);
         setNetRevenue(0);
@@ -219,6 +225,8 @@ export default function RekapShiftPage() {
               revenueCash={revenueCash}
               revenueQRIS={revenueQRIS}
               revenueShopeeFood={revenueShopeeFood}
+              revenueBreakfreeHub={revenueBreakfreeHub}
+              breakfreeHubCount={breakfreeHubCount}
               totalTax={totalTax}
               totalOmset={totalOmset}
               netRevenue={netRevenue}
@@ -244,6 +252,8 @@ export default function RekapShiftPage() {
           revenueCash={revenueCash}
           revenueQRIS={revenueQRIS}
           revenueShopeeFood={revenueShopeeFood}
+          revenueBreakfreeHub={revenueBreakfreeHub}
+          breakfreeHubCount={breakfreeHubCount}
           totalTax={totalTax}
           totalOmset={totalOmset}
           netRevenue={netRevenue}

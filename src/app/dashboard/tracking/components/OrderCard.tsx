@@ -15,19 +15,21 @@ export default function OrderCard({
   onOpenCancelModal,
   onPickupOrder,
 }: OrderCardProps) {
-  const isWaitingCash =
+  const isCashOrder =
+    order.paymentMethod?.toLowerCase().includes('cash') ||
+    order.paymentMethod?.toLowerCase().includes('tunai');
+  const isWaitingPayment =
     order.status === 'Menunggu Bayar' ||
-    (order.isLiveApp &&
-      (order.paymentMethod?.toLowerCase() === 'cash' ||
-        order.paymentMethod?.toLowerCase() === 'tunai') &&
-      order.status === 'Baru');
+    (order.isLiveApp && isCashOrder && order.status === 'Baru');
+  const isWaitingCash = isWaitingPayment && isCashOrder;
+  const isWaitingOnline = isWaitingPayment && !isCashOrder;
 
   return (
     <div
       className={`bg-white rounded-2xl border p-4 shadow-xs space-y-3 relative transition-all ${
         order.isOverdue
           ? 'border-red-300 ring-1 ring-red-200'
-          : isWaitingCash
+          : isWaitingPayment
           ? 'border-amber-300 ring-1 ring-amber-200'
           : 'border-[#EBE6DF]'
       }`}
@@ -59,6 +61,11 @@ export default function OrderCard({
           <span className="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-lg flex items-center gap-1 animate-pulse">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
             BELUM BAYAR (TUNAI DI KASIR)
+          </span>
+        ) : isWaitingOnline ? (
+          <span className="bg-blue-50 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-lg flex items-center gap-1 animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            MENUNGGU BAYAR ONLINE (MIDTRANS)
           </span>
         ) : (
           <span className="bg-[#F5F2EC] text-[#6E5545] px-2 py-0.5 rounded-lg border border-[#EBE6DF]">
@@ -97,7 +104,7 @@ export default function OrderCard({
 
       {/* Tombol Aksi */}
       <div className="space-y-1.5 pt-1">
-        {isWaitingCash ? (
+        {isWaitingPayment ? (
           <>
             <button
               onClick={() => onUpdateStatus(order.id, 'Diproses')}
@@ -106,7 +113,11 @@ export default function OrderCard({
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
               </svg>
-              <span>Konfirmasi Bayar Tunai & Mulai Proses</span>
+              <span>
+                {isWaitingOnline
+                  ? 'Konfirmasi Lunas Manual & Proses'
+                  : 'Konfirmasi Bayar Tunai & Mulai Proses'}
+              </span>
             </button>
             <button
               onClick={() => onOpenCancelModal(order)}

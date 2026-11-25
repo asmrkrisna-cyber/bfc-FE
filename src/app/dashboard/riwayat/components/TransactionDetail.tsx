@@ -13,7 +13,9 @@ export default function TransactionDetail({
   onOpenPrintModal,
   onOpenVoidModal,
 }: TransactionDetailProps) {
-  const isVoid = selectedTx?.status?.toUpperCase().includes('VOID');
+  const isVoid = ['VOID', 'CANCELLED', 'DIBATALKAN'].some((k) =>
+    (selectedTx?.status || '').toUpperCase().includes(k)
+  );
 
   return (
     <div className="w-full lg:w-[420px] bg-white border border-[#EBE6DF] rounded-2xl p-6 shadow-xs flex flex-col justify-between shrink-0">

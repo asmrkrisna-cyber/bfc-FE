@@ -21,11 +21,14 @@ export default function TransactionList({
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'SUKSES' | 'VOID'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const countSukses = transactions.filter((t) => !t.status?.toUpperCase().includes('VOID')).length;
-  const countVoid = transactions.filter((t) => t.status?.toUpperCase().includes('VOID')).length;
+  const isCancelledStatus = (s?: string) =>
+    ['VOID', 'CANCELLED', 'DIBATALKAN'].some((k) => (s || '').toUpperCase().includes(k));
+
+  const countSukses = transactions.filter((t) => !isCancelledStatus(t.status)).length;
+  const countVoid = transactions.filter((t) => isCancelledStatus(t.status)).length;
 
   const filtered = transactions.filter((tx) => {
-    const isVoid = tx.status?.toUpperCase().includes('VOID');
+    const isVoid = isCancelledStatus(tx.status);
     if (filterStatus === 'SUKSES' && isVoid) return false;
     if (filterStatus === 'VOID' && !isVoid) return false;
 
@@ -99,7 +102,7 @@ export default function TransactionList({
       {/* List Card Transaksi */}
       <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
         {filtered.map((tx) => {
-          const isVoid = tx.status?.toUpperCase().includes('VOID');
+          const isVoid = isCancelledStatus(tx.status);
           const isSelected = selectedTxId === tx.id;
 
           return (

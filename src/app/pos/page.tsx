@@ -438,6 +438,8 @@ export default function POSPage() {
       {isPaymentOpen && (
         <PaymentModal
           total={total}
+          cart={cart}
+          customerName={customerName}
           paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
           cashGiven={cashGiven}

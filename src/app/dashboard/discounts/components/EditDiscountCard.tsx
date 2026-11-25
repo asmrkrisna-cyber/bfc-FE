@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DiscountItem } from '@/data/discountData';
 
 interface EditDiscountModalProps {
@@ -23,27 +23,26 @@ export default function EditDiscountCard({
   onClose,
   onSave,
 }: EditDiscountModalProps) {
-  const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [type, setType] = useState<'PERCENTAGE' | 'FIXED'>('PERCENTAGE');
-  const [value, setValue] = useState('');
-  const [minPurchase, setMinPurchase] = useState('');
-  const [maxDiscount, setMaxDiscount] = useState('');
-  const [description, setDescription] = useState('');
-
-  useEffect(() => {
-    if (item) {
-      setCode(item.code || '');
-      setName(item.name || '');
-      setType(item.type || 'PERCENTAGE');
-      setValue(item.value?.toString() || '');
-      setMinPurchase(item.minPurchase?.toString() || '0');
-      setMaxDiscount(item.maxDiscount?.toString() || '');
-      setDescription(item.description || '');
-    }
-  }, [item]);
-
   if (!isOpen || !item) return null;
+  return <EditDiscountForm key={item.id} item={item} onClose={onClose} onSave={onSave} />;
+}
+
+function EditDiscountForm({
+  item,
+  onClose,
+  onSave,
+}: {
+  item: DiscountItem;
+  onClose: () => void;
+  onSave: EditDiscountModalProps['onSave'];
+}) {
+  const [code, setCode] = useState(item.code || '');
+  const [name, setName] = useState(item.name || '');
+  const [type, setType] = useState<'PERCENTAGE' | 'FIXED'>(item.type || 'PERCENTAGE');
+  const [value, setValue] = useState(item.value?.toString() || '');
+  const [minPurchase, setMinPurchase] = useState(item.minPurchase?.toString() || '0');
+  const [maxDiscount, setMaxDiscount] = useState(item.maxDiscount?.toString() || '');
+  const [description, setDescription] = useState(item.description || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
